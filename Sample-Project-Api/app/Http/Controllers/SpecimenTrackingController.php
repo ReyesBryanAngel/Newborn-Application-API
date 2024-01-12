@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\DB;
 class SpecimenTrackingController extends Controller
 {
 
-    const RECORD_NOT_FOUND = 'Sample does not exist';
+    const RECORD_NOT_FOUND = 'Samples has been deleted at this courier record.';
     
     const SENT = 'Sent';
     
@@ -62,6 +62,24 @@ class SpecimenTrackingController extends Controller
             ], Response::HTTP_OK);
         } catch (ModelNotFoundException $e) {
 
+            return response()->json([
+                'status' => Response::HTTP_NOT_FOUND,
+                'message' => $e->getMessage()
+            ], Response::HTTP_NOT_FOUND);
+        }
+    }
+
+    public function deleteSample($id)
+    {
+        try {
+            SpecimenForm::where("id", $id)->delete();
+            Feeding::where('specimen_form_id', $id)->delete();
+    
+            return response()->json([
+                'status' => Response::HTTP_OK,
+                'message' => 'Sample has been deleted'
+            ], Response::HTTP_OK);
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'status' => Response::HTTP_NOT_FOUND,
                 'message' => $e->getMessage()

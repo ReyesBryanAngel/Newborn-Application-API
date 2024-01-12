@@ -43,6 +43,8 @@ Route::group(['middleware' => 'jwt', 'prefix' => 'v1'], function () {
     ->controller(SpecimenTrackingController::class)
     ->group(function () {
         Route::post('/', 'createSample')->name('sample.create');
+        Route::put('{specimenForm}/', 'updateSample')->name('sample.update');
+        Route::delete('{specimenForm}/', 'deleteSample')->name('sample.delete');
         Route::post('/feeding/{specimenForm}', 'createFeeding')->name('feeding.create');
         Route::put('/update-feeding/{specimenForm}', 'updateFeeding')->name('feeding.update');
         Route::post('/courier-information', 'courierInformation')->name('courier.create');
@@ -52,10 +54,7 @@ Route::group(['middleware' => 'jwt', 'prefix' => 'v1'], function () {
         Route::get('/refresh-samples', 'courierSampleRefresh')->name('refreshSample.show');
         Route::get('/refresh-specimen', 'specimenRefresh')->name('specimenRefresh.show');
         Route::get('{specimenForm}/', 'showSpecificSample')->name('specificSample.show');
-        Route::put('{specimenForm}/', 'updateSample')->name('sample.update');
         Route::post('/send-samples', 'sendSamples')->name('sample.send');
         Route::post('/update-checked', 'updateCheckStatus')->name('samples.updateCheckedStatus');
-        Route::delete('{specimenForm}/', 'delete')->name('sample.delete');
-        
     });
 });
