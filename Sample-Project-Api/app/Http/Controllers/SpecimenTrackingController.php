@@ -9,14 +9,11 @@ use App\Http\Resources\SpecimenFormResource;
 use App\Models\CourierInformation;
 use App\Models\Feeding;
 use App\Models\SpecimenForm;
-use Illuminate\Support\Collection;
-use App\Exceptions\SaveException;
 use Cache;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\SpecimenTrackingRequest;
 use Illuminate\Support\Facades\DB;
 
@@ -24,7 +21,7 @@ use Illuminate\Support\Facades\DB;
 class SpecimenTrackingController extends Controller
 {
 
-    const RECORD_NOT_FOUND = 'Samples has been deleted at this courier record.';
+    const RECORD_NOT_FOUND = 'Samples has been deleted at this courier.';
     
     const SENT = 'Sent';
     
@@ -269,7 +266,7 @@ class SpecimenTrackingController extends Controller
             ], Response::HTTP_NOT_FOUND);
         }
 
-        Cache::put('specimen', $specimenFormData, now()->addMinutes(60));
+        Cache::put('specimen', $specimenFormData);
 
         return response()->json([
             'status' => Response::HTTP_OK,
@@ -311,7 +308,7 @@ class SpecimenTrackingController extends Controller
             ], Response::HTTP_NOT_FOUND);
         }
     
-        Cache::put('samples', $collectSamples, now()->addMinutes(30));
+        Cache::put('samples', $collectSamples);
     
         return response()->json([
             'status' => Response::HTTP_OK,
