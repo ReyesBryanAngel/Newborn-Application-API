@@ -8,6 +8,7 @@ use App\Http\Resources\CourierInformationResource;
 use App\Http\Resources\SpecimenFormResource;
 use App\Models\CourierInformation;
 use App\Models\Feeding;
+use Illuminate\Support\Facades\Auth;
 use App\Models\SpecimenForm;
 use Cache;
 use Exception;
@@ -16,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Requests\SpecimenTrackingRequest;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
 
 
 class SpecimenTrackingController extends Controller
@@ -36,6 +38,16 @@ class SpecimenTrackingController extends Controller
     {
         
         $validatedData = $specimenTrackingRequest->validated();
+        $requestId = $specimenTrackingRequest->user_id;
+
+        if ($requestId !== Auth::id()) {
+            return response()->json([
+                'status' => Response::HTTP_CONFLICT,
+                'message' => 'User not found'
+            ], Response::HTTP_CONFLICT);
+        }
+
+        $validatedData['user_id'] = Auth::id();
         $specimenForm = SpecimenForm::create($validatedData);
 
         return response()->json([
@@ -185,7 +197,16 @@ class SpecimenTrackingController extends Controller
     public function courierInformation(CourierInformationRequest $request)
     {
         $validatedData = $request->validated();
+        $requestId = $request->user_id;
+        if ($requestId !== Auth::id()) {
+            return response()->json([
+                'status' => Response::HTTP_CONFLICT,
+                'message' => 'User not found'
+            ], Response::HTTP_CONFLICT);
+        }
+
         $validatedData['result'] = self::SENT;
+        $validatedData['user_id'] = Auth::id();
         $courierInformation = CourierInformation::create($validatedData);
 
         return response()->json([
@@ -254,17 +275,12 @@ class SpecimenTrackingController extends Controller
     }
 
     public function showSpecificSample($id)
-    {
-        $specimenFormId = SpecimenForm::find($id);
-        $specimenFormData = new SpecimenFormResource($specimenFormId);
+    {;
+        $specimenFormId = SpecimenForm::where([
+            'user_id' => Auth::id()
+        ])->find($id);
 
-        if (! $specimenFormId) {
-            return response()->json([
-                'code' => Response::HTTP_NOT_FOUND,
-                'status' => 'failed',
-                'message' => self::RECORD_NOT_FOUND
-            ], Response::HTTP_NOT_FOUND);
-        }
+        $specimenFormData = new SpecimenFormResource($specimenFormId);
 
         Cache::put('specimen', $specimenFormData);
 
@@ -338,7 +354,10 @@ class SpecimenTrackingController extends Controller
 
     public function showAllSample()
     {
-        $specimenForms = SpecimenForm::all();
+        $specimenForms = SpecimenForm::where([
+            'user_id' => Auth::id()
+        ])->get();
+
         $formattedSpecimenForms = SpecimenFormResource::collection($specimenForms);
 
         return response()->json($formattedSpecimenForms, Response::HTTP_OK);
@@ -346,7 +365,7 @@ class SpecimenTrackingController extends Controller
 
     public function showCouriers()
     {
-        $courierInformations = CourierInformation::all();
+        $courierInformations = CourierInformation::where(['user_id' => Auth::id()])->get();
         $formattedCourierInformations = CourierInformationResource::collection($courierInformations);
 
         return response()->json($formattedCourierInformations, Response::HTTP_OK);

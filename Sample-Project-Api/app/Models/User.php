@@ -62,4 +62,14 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+
+    public function specimenForm()
+    {
+        return $this->hasMany(SpecimenForm::class);
+    }
+
+    public function courierInformation()
+    {
+        return $this->hasMany(CourierInformation::class);
+    }
 }

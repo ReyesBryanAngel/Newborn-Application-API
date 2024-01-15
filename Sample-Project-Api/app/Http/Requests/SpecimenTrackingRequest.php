@@ -17,6 +17,7 @@ class SpecimenTrackingRequest extends FormRequest
         
 
         return [
+            'user_id' => 'required',
             'type_of_sample' => $repeat_sample ? self::STRING_REQUIRED : 'nullable',
             'baby_last_name' => $repeat_sample ? self::STRING_REQUIRED : 'nullable',
             'baby_first_name' => $repeat_sample ? self::STRING_REQUIRED : 'nullable',

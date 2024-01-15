@@ -13,6 +13,7 @@ class CourierInformation extends Model
     protected $table = "courier_informations";
 
     protected $fillable = [
+        'user_id',
         'courier',
         'tracking_number',
         'date_of_pickup',
@@ -26,4 +27,9 @@ class CourierInformation extends Model
         'NINJAVAN',
         'LBC'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

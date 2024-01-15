@@ -12,6 +12,7 @@ class CourierInformationRequest extends FormRequest
     public function rules()
     {
         return [
+            'user_id' => 'required',
             'courier' => ['required', 'string', Rule::in(CourierInformation::COURIER_OPTIONS)],
             'tracking_number' => self::STRING_REQUIRED,
             'date_of_pickup' => 'required|date',

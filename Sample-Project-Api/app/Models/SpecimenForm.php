@@ -13,6 +13,7 @@ class SpecimenForm extends Model
     protected $table = "specimen_forms";
 
     protected $fillable = [
+        'user_id',
         'checked',
         'tracking_number',
         'type_of_sample',
@@ -65,5 +66,10 @@ class SpecimenForm extends Model
     public function feeding()
     {
         return $this->hasMany(Feeding::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }
