@@ -96,6 +96,14 @@ return [
         ],
     ],
 
+    'to' => [
+        'asset_url' => env('ASSET_URL'),
+    ],
+
+    'from' => [
+        'name' => env('MAIL_FROM_NAME')
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Global "From" Address

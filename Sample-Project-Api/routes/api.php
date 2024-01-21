@@ -26,7 +26,12 @@ Route::prefix('/auth')
     ->controller(AuthController::class)
     ->group(function () {
             Route::post('/register', 'register')->name('auth.register');
+            Route::put('/resend-otp/{id}', 'resendOtp')->name('auth.resendOtp');
+            Route::put('/verify/{id}', 'verify')->name('auth.verify');
             Route::post('/login', 'login')->name('auth.login');
+            Route::post('/forgot-password', 'forgotPassword')->name('auth.forgotPassword');
+            Route::get('/reset-password/{token}', 'validateToken')->name('auth.validateRequest');
+            Route::post('/change-password', 'changePassword')->name('auth.resetPassword');
 });
 
 Route::group(['middleware' => 'jwt', 'prefix' => 'v1'], function () {

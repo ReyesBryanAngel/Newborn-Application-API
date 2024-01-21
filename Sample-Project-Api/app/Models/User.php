@@ -6,58 +6,37 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Support\Str;
 use App\Traits\UUID;
 
 class User extends Authenticatable implements JWTSubject
 {
     use UUID, HasFactory, Notifiable;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
         'last_name',
         'email',
+        'otp',
+        'is_verified',
         'password',
+        'email_verified_at',
+        'password_reset_token'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
 
-     /**
-     * Get the identifier that will be stored in the subject claim of the JWT.
-     *
-     * @return mixed
-     */
     public function getJWTIdentifier()
     {
         return $this->getKey();
     }
 
-    /**
-     * Return a key value array, containing any custom claims to be added to the JWT.
-     *
-     * @return array
-     */
     public function getJWTCustomClaims()
     {
         return [];
@@ -71,5 +50,18 @@ class User extends Authenticatable implements JWTSubject
     public function courierInformation()
     {
         return $this->hasMany(CourierInformation::class);
+    }
+
+    public function generatePasswordResetToken()
+    {
+        $password_reset_token = Str::random(60);
+        $this->save();
+        return $password_reset_token;
+    }
+
+    public function generateOtp()
+    {
+        $otp = rand(100000, 999999);
+        return $otp;
     }
 }
