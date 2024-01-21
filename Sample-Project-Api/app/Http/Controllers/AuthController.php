@@ -46,6 +46,7 @@ class AuthController extends Controller
 
         return response()->json([
             'id' => $user?->id,
+            'email' => $user?->email,
             'status' => 'success',
             'message' => 'Check your email for OTP verification.'
         ]);
