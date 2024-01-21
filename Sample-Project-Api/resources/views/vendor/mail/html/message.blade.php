@@ -1,7 +1,14 @@
 <x-mail::layout>
 {{-- Header --}}
 <x-slot:header>
-<x-mail::header>
+<x-mail::header :url="config('app.asset_url')">
+    <div style="text-align: center;">
+        <img 
+            src="{{ url('images/my-logo.png') }}" 
+            alt="{{ config('app.name') }}" 
+            style="width:30%; display: inline-block;"
+        >
+    </div>
 </x-mail::header>
 </x-slot:header>
 
