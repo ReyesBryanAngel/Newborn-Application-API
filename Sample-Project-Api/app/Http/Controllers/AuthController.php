@@ -89,7 +89,7 @@ class AuthController extends Controller
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        if (Carbon::now()->diffInSeconds($userVerified->updated_at) > 60) {
+        if (Carbon::now()->diffInHours($userVerified->updated_at) > 1) {
             return response()->json([
                 'code' => Response::HTTP_UNPROCESSABLE_ENTITY,
                 'status' => 'failed',
