@@ -1,1 +1,1 @@
-# Sample-Project-APIV2
+# Sample-Project-API
