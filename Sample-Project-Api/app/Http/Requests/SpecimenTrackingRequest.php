@@ -14,10 +14,10 @@ class SpecimenTrackingRequest extends FormRequest
     public function rules()
     {
         $repeat_sample = $this->input('type_of_sample') !== "Repeat Sample";
-        
+        $isCreateSampleRoute = $this->route()->getName();
 
         return [
-            'user_id' => 'required',
+            'user_id' => $isCreateSampleRoute === 'sample.create' ? 'required' : 'nullable',
             'type_of_sample' => $repeat_sample ? self::STRING_REQUIRED : 'nullable',
             'baby_last_name' => $repeat_sample ? self::STRING_REQUIRED : 'nullable',
             'baby_first_name' => $repeat_sample ? self::STRING_REQUIRED : 'nullable',

@@ -16,11 +16,9 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Requests\SpecimenTrackingRequest;
-use Illuminate\Support\Facades\DB;
-use App\Models\User;
+use App\Services\Facades\SpecimenTracking;
 
-
-class SpecimenTrackingController extends Controller
+class SpecimenTrackingController
 {
 
     const RECORD_NOT_FOUND = 'Samples has been deleted at this courier.';
@@ -99,93 +97,27 @@ class SpecimenTrackingController extends Controller
     public function createFeeding(FeedingRequest $request, SpecimenForm $specimenForm)
     {
         $feedings = $request->feedings;
-        
-        foreach($feedings as $feeding) {
-            $exists = Feeding::where([
-                'specimen_form_id' => $specimenForm->id,
-                'feeding_name' => $feeding
-            ])->exists();
+        try {
+            SpecimenTracking::feedingCreate($feedings, $specimenForm);
 
-            if(!$exists) {
-                Feeding::create([
-                    'specimen_form_id' => $specimenForm->id,
-                    'feeding_name' => $feeding,
-                    'is_selected' => 1
-                ]);
-            }
+            return response()->json([
+                'code' => Response::HTTP_CREATED,
+                'status' => 'success',
+                'message' => 'Feeding Created!'
+            ], Response::HTTP_CREATED);
+        } catch (Exception $e) {
+            return response()->json([
+                'code' => Response::HTTP_BAD_REQUEST,
+                'status' => 'failed',
+                'message' => 'Bad Request!'
+            ], Response::HTTP_BAD_REQUEST);
         }
-
-        return response()->json([
-            'code' => Response::HTTP_CREATED,
-            'status' => 'success',
-            'message' => 'Feeding Created!'
-        ], Response::HTTP_CREATED);
     }
 
     public function updateFeeding(FeedingRequest $request, SpecimenForm $specimenForm)
     {
-        DB::beginTransaction();
-
-        try {
-            $feedings = $request->feedings;
-
-           if(count($feedings) == 0) {
-            Feeding::where('specimen_form_id', $specimenForm->id)
-            ->update(['is_selected' => false]);
-           }
-
-           $selectedProducts = Feeding::where([
-               'specimen_form_id' => $specimenForm->id,
-               'is_selected' => true
-           ])->pluck('feeding_name')->toArray();
-
-           $notSelected = array_diff($selectedProducts, $feedings);
-
-           foreach($feedings as $feeding) {
-
-               $feed = Feeding::where([
-                   'specimen_form_id' => $specimenForm->id,
-                   'feeding_name' => $feeding
-               ])->first();
-
-               if(!$feed) {
-                Feeding::create([
-                       'specimen_form_id' => $specimenForm->id,
-                       'feeding_name' => $feeding,
-                       'is_selected' => true
-                   ]);
-               } else if($feed) {
-                   $feed->update(['is_selected' => true]);
-               }
-           }
-
-           foreach($notSelected as $feeding) {
-                $prod = Feeding::where([
-                    'specimen_form_id' => $specimenForm->id,
-                    'feeding_name' => $feeding
-                ])->first();
-                $prod->update(['is_selected' => false]);
-            }
-
-            DB::commit();
-        } catch (Exception $e) {
-            info($e);
-            DB::rollBack();
-
-            if($e instanceof Exception) {
-                return response()->json([
-                    'code' => $e->getCode(),
-                    'status' => 'failed',
-                    'message' => $e->getMessage()
-                ], $e->getCode());
-            }
-
-            return response()->json([
-                'code' => Response::HTTP_BAD_REQUEST,
-                'status' => 'failed',
-                'message' => $e->getMessage()
-            ], Response::HTTP_BAD_REQUEST);
-        }
+        $feedings = $request->feedings;
+        SpecimenTracking::feedingUpdate($feedings, $specimenForm);
 
         return response()->json([
             'status' => Response::HTTP_OK,
@@ -193,27 +125,23 @@ class SpecimenTrackingController extends Controller
         ], Response::HTTP_OK);
     }
 
-
     public function courierInformation(CourierInformationRequest $request)
     {
         $validatedData = $request->validated();
         $requestId = $request->user_id;
-        if ($requestId !== Auth::id()) {
+        $courierInformation = SpecimenTracking::courierCreate($requestId, $validatedData);
+        if (!$courierInformation) {
             return response()->json([
                 'status' => Response::HTTP_CONFLICT,
                 'message' => 'User not found'
             ], Response::HTTP_CONFLICT);
+        } else {
+            return response()->json([
+                'status' => Response::HTTP_OK,
+                'message' => 'Courier information has been saved.',
+                'tracking_number' => $courierInformation->tracking_number,
+            ], Response::HTTP_OK);
         }
-
-        $validatedData['result'] = self::SENT;
-        $validatedData['user_id'] = Auth::id();
-        $courierInformation = CourierInformation::create($validatedData);
-
-        return response()->json([
-            'status' => Response::HTTP_OK,
-            'message' => 'Courier information has been saved.',
-            'tracking_number' => $courierInformation->tracking_number,
-        ], Response::HTTP_OK);
     }
 
     public function sendSamples(Request $request)
@@ -241,36 +169,18 @@ class SpecimenTrackingController extends Controller
 
     public function updateCheckStatus(Request $request)
     {
-        try {
-            $filteredData = $request->all(); 
-            $checkedItems = array_filter($filteredData, function ($data) {
-                return $data['checked'] === true || $data['checked'] === 1;
-            });
+        $success = SpecimenTracking::checkStatusUpdate($request);
 
-            if (count($checkedItems) === 0) {
-                return response()->json([
-                    'status' => Response::HTTP_UNPROCESSABLE_ENTITY,
-                    'message' => 'Select atleast one sample to deliver.',
-                ], Response::HTTP_UNPROCESSABLE_ENTITY);
-            } else {
-                foreach ($filteredData as $data) {
-                    
-                    $id = $data['id'];
-                    $checked = $data['checked'];
-            
-                    SpecimenForm::where('id', $id)->update(['checked' => $checked]);
-                }
-            
-                return response()->json([
-                    'status' => Response::HTTP_OK,
-                    'message' => 'Check status updated successfully',
-                ], Response::HTTP_OK);
-            }
-        } catch(Exception $e) {
+        if ($success) {
             return response()->json([
-                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'An error occurred while updating samples: ' . $e->getMessage(),
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+                'status' => Response::HTTP_OK,
+                'message' => 'Check status updated successfully',
+            ], Response::HTTP_OK);
+        } else {
+            return response()->json([
+                'status' => Response::HTTP_UNPROCESSABLE_ENTITY,
+                'message' => 'Select at least one sample to deliver.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
     }
 

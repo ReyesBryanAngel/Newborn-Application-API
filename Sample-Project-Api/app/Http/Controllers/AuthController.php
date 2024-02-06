@@ -190,7 +190,7 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if ($user == null) {
+        if ($user == null || $user->is_verified === 0) {
             return response()->json([
                 'code' => Response::HTTP_UNPROCESSABLE_ENTITY,
                 'status' => 'failed',
