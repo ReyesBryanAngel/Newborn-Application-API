@@ -125,7 +125,6 @@ class Factory
             $validatedData['user_id'] = Auth::id();
             $courierInformation = CourierInformation::create($validatedData);
             DB::commit();
-            // dd($courierInformation);
 
             return $courierInformation;
         } catch (Exception $e) {
