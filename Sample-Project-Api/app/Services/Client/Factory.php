@@ -142,7 +142,7 @@ class Factory
             $filteredData = $request->all(); 
            
             $checkedItems = array_filter($filteredData, function ($data) {
-                return $data['checked'] === true || $data['checked'] === 1;
+                return isset($data['checked']) && ($data['checked'] === true || $data['checked'] === 1);
             });
 
             if (count($checkedItems) === 0) {

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CourierInformation;
 use App\Models\User;
 use App\Models\SpecimenForm;
 use Illuminate\Http\Response;
@@ -10,7 +11,7 @@ use Tests\TestCase;
 class SpecimenTrackingControllerTest extends TestCase
 {
     /** @test */
-    public function CreateSampleTest()
+    public function createSampleTest()
     {
         $mockUser = User::factory()->create();
         $token = auth()->login($mockUser);
@@ -102,6 +103,115 @@ class SpecimenTrackingControllerTest extends TestCase
           ]);
     }
 
+    /** @test */
+    public function courierInformationTest()
+    {
+        $mockUser = User::factory()->create();
+        $token = auth()->login($mockUser);
+        $courierInfoFactory = CourierInformation::factory()->forUser($mockUser)->create()->toArray();
+
+        $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->postJson(route('courier.create'), $courierInfoFactory)
+          ->assertStatus(Response::HTTP_OK)
+          ->assertJsonStructure([
+            "status",
+            "message",
+            "tracking_number"
+          ]);
+    }
+
+    /** @test */
+    public function sendSamplesTest()
+    {
+        $mockUser = User::factory()->create();
+        $token = auth()->login($mockUser);
+        $sampleFactory = SpecimenForm::factory()->forUser($mockUser)->create()->toArray();
+
+        $fieldsToUpdate = [
+          "specimen_status" => "In Transit",
+          "tracking_number" => "83928174"
+        ];
+        $updateSample = array_merge($sampleFactory, $fieldsToUpdate);
+
+        $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->postJson(route('sample.send'),$updateSample)
+          ->assertStatus(Response::HTTP_OK)
+          ->assertJsonStructure([
+            "status",
+            "message"
+          ]);
+    }
+
+    /** @test */
+    public function updateCheckStatusTest()
+    {
+      $mockUser = User::factory()->create();
+      $token = auth()->login($mockUser);
+      SpecimenForm::factory()->forUser($mockUser)->create()->toArray();
+      $sampleForm = SpecimenForm::where('user_id', $mockUser->id)->first();
+      $fieldsToUpdate = [
+        [
+            "id" => $sampleForm->id,
+            "checked" => true
+        ],
+        [
+          "id" => $sampleForm->id,
+          "checked" => false
+        ]
+      ];
+
+      $this->withHeaders([
+          'Authorization' => 'Bearer ' . $token,
+      ])->postJson(route('samples.updateCheckedStatus', $sampleForm->id), $fieldsToUpdate)
+        ->assertStatus(Response::HTTP_OK)
+        ->assertJsonStructure([
+          "status",
+          "message"
+        ]);
+    }
+
+    /** @test */
+    public function showSpecificSampleTest()
+    {
+        $mockUser = User::factory()->create();
+        $token = auth()->login($mockUser);
+        SpecimenForm::factory()->forUser($mockUser)->create()->toArray();
+        $sampleForm = SpecimenForm::where('user_id', $mockUser->id)->first();
+
+        $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->getJson(route('specificSample.show', $sampleForm->id))
+          ->assertStatus(Response::HTTP_OK)
+          ->assertJsonStructure([
+            "status",
+            "message",
+            "samples"
+          ]);
+    }
+
+    /** @test */
+    public function showCourierSamplesTest()
+    {
+        $mockUser = User::factory()->create();
+        $token = auth()->login($mockUser);
+        SpecimenForm::factory()->forUser($mockUser)->create()->toArray();
+        $fieldsToUpdate = [
+          "specimen_status" => "In Transit",
+          "tracking_number" => "83928174"
+        ];
+
+        $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->getJson(route('courierSample.show', $fieldsToUpdate["tracking_number"]))
+          ->assertStatus(Response::HTTP_OK)
+          ->assertJsonStructure([
+            "status",
+            "message",
+            "samples"
+          ]);
+    }
 
     private function updatedSampleValue($mockUser)
     {
