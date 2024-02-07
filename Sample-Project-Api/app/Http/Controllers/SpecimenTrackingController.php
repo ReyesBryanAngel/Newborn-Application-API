@@ -27,10 +27,10 @@ class SpecimenTrackingController
     
     const PENDING = 'Pending';
     
-    public function __construct(Request $request)
-    {
-        $this->request = $request;
-    }
+    // public function __construct(Request $request)
+    // {
+    //     $this->request = $request;
+    // }
 
     public function createSample(SpecimenTrackingRequest $specimenTrackingRequest)
     {
@@ -57,7 +57,6 @@ class SpecimenTrackingController
 
     public function updateSample(SpecimenTrackingRequest $specimenTrackingRequest, $id)
     {
-
         try {
             $validatedData = $specimenTrackingRequest->validated();
             $specimenForm = SpecimenForm::findOrFail($id);
