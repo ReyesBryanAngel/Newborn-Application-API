@@ -1,4 +1,4 @@
-# [Sample-Project-Api]
+# Sample-Project-Api
 
 ## Description:
 Sample Project Api is an api that saves data of new born babies and track courier information manually. It allows user registration with email verification, password reset, and data manipulation using key features of Laravel
