@@ -10,7 +10,7 @@ Sample Project Api is an api that saves data of new born babies and track courie
 
 3. Setup docker-compose file for your own database configuration
 
-4. Once database is setup, run php artisan migrate to migrate all tables
+4. Once database is setup, run 'php artisan migrate' and 'php artisan db:seed'
 
 5. Run php artisan serve
 
