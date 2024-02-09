@@ -26,11 +26,6 @@ class SpecimenTrackingController
     const SENT = 'Sent';
     
     const PENDING = 'Pending';
-    
-    // public function __construct(Request $request)
-    // {
-    //     $this->request = $request;
-    // }
 
     public function createSample(SpecimenTrackingRequest $specimenTrackingRequest)
     {
