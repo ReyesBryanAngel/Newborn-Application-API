@@ -13,6 +13,7 @@ use App\Models\PasswordResetToken;
 use App\Http\Requests\AuthControllerRequest;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -253,7 +254,27 @@ class AuthController extends Controller
     public function changePassword(Request $request)
     {
         $password = $request->only(['password', 'password_confirmation', 'token']);
+        $rules = [
+            'password' => [
+                'required', 
+                'string', 
+                'min:8', 
+                'confirmed', 
+                'regex:/[A-Z]/', 
+                'regex:/[0-9]/', 
+                'regex:/[!@#$%^&*()\-_=+{};:,<.>]/'
+            ],
+        ];
+    
+        $validator = Validator::make($request->all(), $rules);
 
+        if ($validator->fails()) {
+            return response()->json([
+                "status" => "failed",
+                "code" => Response::HTTP_UNPROCESSABLE_ENTITY,
+                "message" => $validator->errors()->first(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
         $passwordReset = PasswordResetToken::where('token', $password['token'])->first();
 
         $response = null;
